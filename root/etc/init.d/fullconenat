@@ -6,52 +6,61 @@ START=99
 re=0
 
 start(){
-	echo "enable"
-	enable=$(uci get fullconenat.config.enabled 2>/dev/null)
-	all_enable=$(uci get fullconenat.config.all_enabled 2>/dev/null)
+	local fw3_buildin mode fullconenat_ip fullcone masq
+	strings `which fw3` | grep -q "fullcone"
+	fw3_buildin=$?
+	mode=$(uci get fullconenat.config.mode 2>/dev/null)
+	if modprobe -q "xt_FULLCONENAT"; then
+		[ $fw3_buildin -eq 0 ] && echo -n "fw3 build-in, change settings in /etc/config/firewall either. "
+		echo "$mode."
+	else
+		echo "not supported."
+		return 1
+	fi
+	fullcone=0
+	masq=0
 	fullconenat_ip=$(uci get fullconenat.config.fullconenat_ip 2>/dev/null)
-	if [ $enable -eq 1 ]; then
-		if [ $all_enable -eq 0 ]; then
+	if [ "$mode" == "ips" ]; then
 			sed -i '/FULLCONENAT/d' /etc/firewall.user
 			echo "iptables -t nat -A zone_wan_prerouting -j FULLCONENAT" >> /etc/firewall.user
 			echo "iptables -t nat -A zone_wan_postrouting -s $fullconenat_ip -j FULLCONENAT" >> /etc/firewall.user
 			echo "iptables -t nat -A zone_wan_postrouting -j MASQUERADE" >> /etc/firewall.user
-		elif [ $all_enable -eq 1 ]; then
+	elif [ "$mode" == "all" ]; then
+		if [ $fw3_buildin -ne 0 ]; then
 			iptables -t nat -D zone_wan_postrouting -s $fullconenat_ip -j FULLCONENAT
 			iptables -t nat -D zone_wan_postrouting -j MASQUERADE
 			sed -i '/zone_wan_postrouting -j MASQUERADE/d' /etc/firewall.user
 			sed -i '/FULLCONENAT/d' /etc/firewall.user
 			echo "iptables -t nat -A zone_wan_prerouting -j FULLCONENAT" >> /etc/firewall.user
 			echo "iptables -t nat -A zone_wan_postrouting -j FULLCONENAT" >> /etc/firewall.user
+		else
+			fullcone=1
 		fi
-		uci set firewall.@zone[1].masq=0
-		uci commit firewall
-			if [ $re -eq 0 ]; then
-				echo $re
-				/etc/init.d/firewall restart
-			fi 
+	else
+		masq=1
 	fi
+	[ $fw3_buildin -eq 0 ] && uci set firewall.@defaults[0].fullcone=$fullcone
+	uci set firewall.@zone[1].masq=$masq
+	uci commit firewall
+	/etc/init.d/firewall restart
 }
 
 stop(){
-	echo "stop"
 	fullconenat_ip=$(uci get fullconenat.config.fullconenat_ip 2>/dev/null)
-    enable=$(uci get fullconenat.config.enabled 2>/dev/null)	
-    if [ $enable -eq 0 ]; then
-		echo "disable"
-		iptables -t nat -D zone_wan_prerouting -j FULLCONENAT
-		iptables -t nat -D zone_wan_postrouting -s $fullconenat_ip -j FULLCONENAT
-		iptables -t nat -D zone_wan_postrouting -j MASQUERADE
-		iptables -t nat -D zone_wan_postrouting -j FULLCONENAT
-		sed -i '/zone_wan_postrouting -j MASQUERADE/d' /etc/firewall.user
-		sed -i '/FULLCONENAT/d' /etc/firewall.user
+	mode=$(uci get fullconenat.config.mode 2>/dev/null)	
+	echo "$mode, $fullconenat_ip"
+	iptables -t nat -D zone_wan_prerouting -j FULLCONENAT
+	iptables -t nat -D zone_wan_postrouting -s $fullconenat_ip -j FULLCONENAT
+	iptables -t nat -D zone_wan_postrouting -j MASQUERADE
+	iptables -t nat -D zone_wan_postrouting -j FULLCONENAT
+	sed -i '/zone_wan_postrouting -j MASQUERADE/d' /etc/firewall.user
+	sed -i '/FULLCONENAT/d' /etc/firewall.user
+	[ $re -eq 0 ] && {
+		uci set firewall.@defaults[0].fullcone=0
 		uci set firewall.@zone[1].masq=1
 		uci commit firewall
-	    if [ $re -ne 1 ]; then
-			echo $re
-			/etc/init.d/firewall restart
-        fi 
-	fi
+		/etc/init.d/firewall restart
+	}
 }
 
 
@@ -59,5 +68,4 @@ restart(){
 	re=1
 	stop
 	start
-	/etc/init.d/firewall restart
 }
