@@ -51,6 +51,7 @@ o.write = function (self, sec, val)
   zn:set("masq", val == "disable" and 1 or 0)
   if fw3_buildin then
     def:set("fullcone", val == "all" and 1 or 0)
+    zn:set("fullcone", val == "all" and 1 or 0)
   end
   fwm.commit()
   return self.map:set(sec, self.option, val)

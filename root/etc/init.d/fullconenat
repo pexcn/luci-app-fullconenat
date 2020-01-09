@@ -39,7 +39,10 @@ start(){
 	else
 		masq=1
 	fi
-	[ $fw3_buildin -eq 0 ] && uci set firewall.@defaults[0].fullcone=$fullcone
+	[ $fw3_buildin -eq 0 ] && {
+		uci set firewall.@defaults[0].fullcone=$fullcone
+		uci set firewall.@zone[1].fullcone=$fullcone
+	}
 	uci set firewall.@zone[1].masq=$masq
 	uci commit firewall
 	/etc/init.d/firewall restart
@@ -57,6 +60,7 @@ stop(){
 	sed -i '/FULLCONENAT/d' /etc/firewall.user
 	[ $re -eq 0 ] && {
 		uci set firewall.@defaults[0].fullcone=0
+		uci set firewall.@zone[1].fullcone=0
 		uci set firewall.@zone[1].masq=1
 		uci commit firewall
 		/etc/init.d/firewall restart

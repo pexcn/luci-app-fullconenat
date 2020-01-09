@@ -1,5 +1,5 @@
 msgid "fullconenat"
-msgstr "Fullcone NAT"
+msgstr "全端口映射"
 
 msgid "FULLCONENAT"
 msgstr "Fullcone NAT"
