@@ -18,7 +18,6 @@ start(){
 		return 1
 	fi
 	fullcone=0
-	masq=0
 	fullconenat_ip=$(uci get fullconenat.config.fullconenat_ip 2>/dev/null)
 	if [ "$mode" == "ips" ]; then
 			sed -i '/FULLCONENAT/d' /etc/firewall.user
@@ -36,14 +35,11 @@ start(){
 		else
 			fullcone=1
 		fi
-	else
-		masq=1
 	fi
 	[ $fw3_buildin -eq 0 ] && {
 		uci set firewall.@defaults[0].fullcone=$fullcone
 		uci set firewall.@zone[1].fullcone=$fullcone
 	}
-	uci set firewall.@zone[1].masq=$masq
 	uci commit firewall
 	/etc/init.d/firewall restart
 }
@@ -61,7 +57,6 @@ stop(){
 	[ $re -eq 0 ] && {
 		uci set firewall.@defaults[0].fullcone=0
 		uci set firewall.@zone[1].fullcone=0
-		uci set firewall.@zone[1].masq=1
 		uci commit firewall
 		/etc/init.d/firewall restart
 	}

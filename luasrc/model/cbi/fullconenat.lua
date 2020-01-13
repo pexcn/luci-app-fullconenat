@@ -48,7 +48,6 @@ o.cfgvalue = function (self, sec)
 end
 o.write = function (self, sec, val)
   val = has_module and val or "disable"
-  zn:set("masq", val == "disable" and 1 or 0)
   if fw3_buildin then
     def:set("fullcone", val == "all" and 1 or 0)
     zn:set("fullcone", val == "all" and 1 or 0)
