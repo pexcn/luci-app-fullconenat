@@ -8,4 +8,5 @@ function index()
 	page = entry({"admin", "network", "fullconenat"}, cbi("fullconenat"), _("fullconenat"), 101)
 	page.i18n = "fullconenat"
 	page.dependent = true
+	page.acl_depends = { "luci-app-fullconenat" }
 end
