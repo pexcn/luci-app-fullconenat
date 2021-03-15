@@ -12,7 +12,7 @@ end
 has_module = testcmd("modprobe -q xt_FULLCONENAT")
 fw3_buildin = testcmd("strings `which fw3` | grep -q fullcone")
 
-m = Map("fullconenat", translate("Full cone NAT"),
+m = Map("fullconenat", translate("Full Cone NAT"),
 	translate("FullConeNat."))
 status="<strong><font color=\"red\">Not supported, Kernel module needed: xt_FULLCONENAT</font></strong>"
 if has_module then
@@ -23,20 +23,20 @@ else
 end
 end
 
-m = Map("fullconenat", translate("FullConeNat"), "%s - %s" %{translate("FULLCONENAT"), translate(status)})
+m = Map("fullconenat", translate("Full Cone NAT"), "%s - %s" %{translate("Full Cone NAT"), translate(status)})
 
 des = fw3_buildin and "Build-in mode, set the `fullcone` option to firewall configure either." or "Manual mode, write to the firewall custom rules settings only."
 s = m:section(TypedSection, "fullconenat", translate("Settings"), translate(des))
 s.anonymous = true
 
-o = s:option(ListValue, "mode", translate("Register modes"), translate("<strong><font color=\"red\">Warning!!! There is security risk if enabled.</font></strong>"))
+o = s:option(ListValue, "mode", translate("Register modes"), translate("<strong><font color=\"red\">Warning: There is security risk if enabled.</font></strong>"))
 o.widget  = "radio"
 o.orientation = "horizontal"
 o.default = "disable"
 o.rmempty = false
 o:value("disable", translate("Disable"))
-o:value("ips", translate("IP Address Only"))
-o:value("all", translate("ALL Enabled"))
+o:value("ips", translate("IP Address List"))
+o:value("all", translate("All Enabled"))
 o.cfgvalue = function (self, sec)
   local ret = "disable"
   if fw3_buildin and def:get("fullcone") == "1" then
@@ -56,8 +56,8 @@ o.write = function (self, sec, val)
   return self.map:set(sec, self.option, val)
 end
 
-o = s:option(Value, "fullconenat_ip", translate("FullConeNat IP"), translate("Enable FullConeNat for specified IP Address.") .. "<br />" .. (fw3_buildin and translate("Manual mode, write to the firewall custom rules settings only.") or ""))
-o.placeholder="192.168.1.100,192.168.1.101,192.168.1.102"
+o = s:option(Value, "fullconenat_ip", translate("Full Cone NAT IP"), translate("Enable Full Cone NAT for specified IP Address.") .. "<br />" .. (fw3_buildin and translate("Manual mode, write to the firewall custom rules settings only.") or ""))
+o.placeholder="192.168.1.100,192.168.1.101"
 o.rempty = true
 o.optional = false
 o:depends("mode", "ips")
